@@ -1,0 +1,47 @@
+from fastapi import FastAPI, Query
+from typing import Optional
+import pandas as pd
+
+app = FastAPI()
+
+# Charger les données
+df_achat = pd.read_csv("https://raw.githubusercontent.com/OpenClassrooms-Student-Center/creez_un_dashboard/master/Partie_2/achats.csv",
+                       sep=",",
+                       dtype={"product_id": str, "cookie_id": str, "dept": str}
+                       )
+df_clic = pd.read_csv("https://raw.githubusercontent.com/OpenClassrooms-Student-Center/creez_un_dashboard/master/Partie_2/clics.csv",
+                      sep=",",
+                      dtype={"cookie_id": str}
+                      )
+df_impression = pd.read_csv("https://raw.githubusercontent.com/OpenClassrooms-Student-Center/creez_un_dashboard/master/Partie_2/impressions.csv",
+                            sep=",",
+                            dtype={"campaign_id": str, "cookie_id": str, "external_site_id": str}
+                            )
+
+fusion_data = pd.merge(df_achat, df_clic, on='cookie_id', how='left')
+fusion_data = pd.merge(fusion_data, df_impression, on='cookie_id', how='left')
+
+
+
+def data_campaign(campaign_id):
+    # Filtre les données en fonction de campagne_id
+    filtre_data = fusion_data[fusion_data['campaign_id'] == campaign_id]
+
+    return filtre_data
+
+@app.get("/get_data")
+async def get_data():
+
+    json_data = fusion_data.to_json()
+
+    return json_data
+
+@app.get("/get_data_campaign")
+async def get_data_campaign(campaign_id: str = Query(..., description="ID de la campagne")):
+    # Filtre les données par campagne_id
+    filtre_data = data_campaign(campaign_id)
+    json_data = filtre_data.to_json()
+
+    return json_data
+
+
