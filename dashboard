@@ -1,0 +1,25 @@
+import streamlit as st
+import requests
+import pandas as pd
+
+API_URL = "http://127.0.0.1:8000"
+
+# Fonction pour obtenir les données
+def get_data(endpoint):
+    response = requests.get(f"{API_URL}/{endpoint}")
+    data = response.json()
+    return pd.read_json(data)
+
+st.title("Dashboard Crédit Corporatif")
+
+# Obtenir les données fusionnées dans l'API
+data = get_data("get_data")
+st.write("Le tableau de données :")
+st.dataframe(data)
+
+# Proposez à l'utilisateur d'entrer l'identifiant de la campagne souhaitée, et afficher le tableau filtré
+campaign_id = st.text_input("Entrez l'identifiant de la campagne:")
+if campaign_id:
+    campaign_data = get_data(f"get_data_campaign?campaign_id={campaign_id}")
+    st.write(f"Données pour la campagne {campaign_id}:")
+    st.dataframe(campaign_data)
